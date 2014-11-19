@@ -1,4 +1,6 @@
+#!/usr/bin/python3
 import abc
+import curses
 
 
 class Grid:
@@ -48,8 +50,22 @@ class CursesRenderer(Renderer):
     def __init__(self, _grid):
         super().__init__(_grid)
 
+    def __enter__(self):
+        self._scr = curses.initscr()
+        curses.noecho()
+        curses.cbreak()
+        self._scr.keypad(1)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        curses.nocbreak()
+        curses.echo()
+        self._scr.keypad(0)
+        curses.endwin()
+
     def render(self):
-        pass
+        self._scr.addstr(str(self._grid))
+        self._scr.getch()
 
 
 if __name__ == '__main__':
@@ -57,5 +73,5 @@ if __name__ == '__main__':
     p1 = Path(grid, Pos(10, 10), Pos(10, 20))
     print(p1)
 
-    renderer = CursesRenderer(grid)
-    renderer.render()
+    with CursesRenderer(grid) as renderer:
+        renderer.render()
